@@ -6,7 +6,8 @@ This is _NOT_ meant to be comprehensive or accurate to real-life, though I will
 try my best :)
 
 The project is inspired by Sebastian Lague's DLS (Digital Logic Sim), though
-there is not the same focus on accuracy and is more focused on problem solving.
+there is not the same focus on accuracy and is more focused on problem solving,
+rather than diagramming and simulating.
 
 ## Features
 
@@ -14,6 +15,6 @@ there is not the same focus on accuracy and is more focused on problem solving.
   - NAND, NOR, NOT, I/O
 - Common Logic Pieces
   - AND, OR, XOR
-- Clocks!
+- NO Clocks!
 
 And that's it!
