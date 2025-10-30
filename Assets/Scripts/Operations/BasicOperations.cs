@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 
 namespace Fixor {
@@ -27,11 +28,11 @@ namespace Fixor {
     
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     public static class Operations {
-        public static uint NOT(uint input) => ~input;
-        public static uint AND(uint input) => (input & 0b11) >> 1;
-        public static uint OR(uint input) => (input | (input >> 1)) & 1;
-        public static uint XOR(uint input) => (input ^ (input >> 1)) & 1;
-        public static uint NAND(uint input) => ~((input & 0b11) >> 1);
-        public static uint NOR(uint input) => ~((input | (input >> 1)) & 1);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static uint NOT(uint input) => ~input;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static uint AND(uint input) => (input & 0b11) >> 1;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static uint OR(uint input) => (input | (input >> 1)) & 1;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static uint XOR(uint input) => (input ^ (input >> 1)) & 1;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static uint NAND(uint input) => ~((input & 0b11) >> 1);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static uint NOR(uint input) => ~((input | (input >> 1)) & 1);
     }
 }
