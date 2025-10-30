@@ -5,8 +5,8 @@ using UnityEngine;
 
 namespace Fixor {
     public class ProblemSpace : MonoBehaviour {
-        [SerializeField] List<Chip> chips;
-        [SerializeField] List<Wire> wires;
+        public HashSet<Chip> chips;
+        public HashSet<Wire> wires;
 
         [SerializeField] PinReceptor[] ins;
         [SerializeField] PinReceptor[] outs;
