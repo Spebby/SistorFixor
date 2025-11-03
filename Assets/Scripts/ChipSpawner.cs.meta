@@ -1,3 +1,15 @@
 fileFormatVersion: 2
 guid: 9064119c200c4927b1e2275c50c9b90f
-timeCreated: 1761844767
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - ScrollBar: {instanceID: 0}
+  - ButtonPrefab: {fileID: 6967474382353674187, guid: dccd208c44f961f3aa96e61dc21efbd5, type: 3}
+  - ChipPrefab: {fileID: 6967474382353674187, guid: 9fed9ddb24bdc0b6e93dea69f6a8a20e, type: 3}
+  - PulserPrefab: {fileID: 6967474382353674187, guid: 7848cdb7115acb94abed8deb28d19e62, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
