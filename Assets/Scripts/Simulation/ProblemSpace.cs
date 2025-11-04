@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Text;
 using UnityEngine;
 
 
@@ -34,9 +37,7 @@ namespace Fixor {
         public void Register(Output o) => _outs.Add(o);
         public void Register(Wire wire) {
             _wires.Add(wire);
-            foreach (Pulser p in _ins) {
-                _currQueue.Enqueue(p);
-            }
+            PulseStart();
             _currQueue.Enqueue(wire.B.Parent);
         }
 
@@ -45,10 +46,15 @@ namespace Fixor {
         public void Deregister(Output o) => _outs.Remove(o);
         public void Deregister(Wire wire) {
             _wires.Remove(wire);
+            PulseStart();
+            _currQueue.Enqueue(wire.B.Parent);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void PulseStart() {
             foreach (Pulser p in _ins) {
                 _currQueue.Enqueue(p);
             }
-            _currQueue.Enqueue(wire.B.Parent);
         }
 
 
@@ -89,6 +95,10 @@ namespace Fixor {
             _currQueue.Enqueue(pulser);
         }
 
+        
+        /**
+         * Graph construction code for problems
+         */
         
         // Prime example of code to replace post-prototype
         public void InitLevel(GraphDataSO level) {
@@ -150,6 +160,7 @@ namespace Fixor {
             }
             
             LayoutNodes(inputNodes, chipNodes, outputNodes);
+            PulseStart();
         }
 
         static void LayoutNodes(Pulser[] inputs, Chip[] chips, Output[] outputs) {
@@ -171,14 +182,14 @@ namespace Fixor {
 
             // Inputs on left
             for (int i = 0; i < nInputs; i++) {
-                float x = bottomLeft.x + width * 0.1f; // 10% from left
+                float x = bottomLeft.x + width * 0.075f; // 10% from left
                 float y = topRight.y - inputSpacing * (i + 1);
                 inputs[i].transform.position = new Vector3(x, y, Z);
             }
 
             // Outputs on right
             for (int i = 0; i < nOutputs; i++) {
-                float x = topRight.x - width * 0.1f; // 10% from right
+                float x = topRight.x - width * 0.075f; // 10% from right
                 float y = topRight.y - outputSpacing * (i + 1);
                 outputs[i].transform.position = new Vector3(x, y, Z);
             }
@@ -189,12 +200,10 @@ namespace Fixor {
             float chipSpacingX = width / (nChips + 1);
             for (int i = 0; i < nChips; i++) {
                 float x = bottomLeft.x + chipSpacingX * (i + 1);
-                float y = topRight.y - chipSpacingY * (i + 1);
+                float y = topRight.y - chipSpacingY * (i + 1) + height * 0.05f;
                 chips[i].transform.position = new Vector3(x, y, Z);
             }
         }
-
-        
         
         [SerializeField] GameObject ChipPrefab;
         [SerializeField] GameObject PulserPrefab;
@@ -209,9 +218,9 @@ namespace Fixor {
             return o;
         }
         
-        public Chip CreateChip(Chip.Type type, string name = "") {
+        public Chip CreateChip(Chip.Type type, string chipName = "") {
             Chip c = Instantiate(ChipPrefab).GetComponent<Chip>();
-            c.Initialise(string.IsNullOrEmpty(name) ? type.ToString() : name , type, type == Chip.Type.NOT ? 1u : 2u, 1u);
+            c.Initialise(string.IsNullOrEmpty(chipName) ? type.ToString() : chipName , type, type == Chip.Type.NOT ? 1u : 2u, 1u);
             return c;
         }
         
@@ -219,6 +228,133 @@ namespace Fixor {
             GameObject obj = new(nameof(Wire));
             Wire       w   = obj.AddComponent<Wire>();
             w.Initialise(a, b);
+        }
+
+        public GraphDataSO Serialise() => GraphDataSO.BuildGraphData(_ins, _chips, _outs);
+    }
+
+    public static class TruthTableGenerator {
+        // currently this doesn't report if the graph is invalid. I think that's an acceptable tradeoff.
+        public static List<(bool[] inputs, bool[] outputs)> GenerateTruthTable(GraphDataSO graph) {
+            int nInputs   = graph.inputCount;
+            int nChips    = graph.chipCount;
+            int nOutputs  = graph.outputCount;
+            int nodeCount = graph.NodeCount;
+
+            int                                   totalCombinations = 1 << nInputs;
+            List<(bool[] inputs, bool[] outputs)> table             = new(totalCombinations);
+
+            for (int combo = 0; combo < totalCombinations; combo++) {
+                bool[] nodeValues = new bool[nodeCount];
+
+                // --- Assign input bits ---
+                for (int i = 0; i < nInputs; i++)
+                    nodeValues[i] = ((combo >> i) & 1) == 1;
+
+                // --- Evaluate chip nodes ---
+                for (int chipIdx = 0; chipIdx < nChips; chipIdx++) {
+                    int nodeIndex = nInputs + chipIdx;
+
+                    // Collect connected inputs for this chip
+                    List<bool> inputs = new();
+                    for (int src = 0; src < nodeCount; src++) {
+                        if (graph.Matrix[src, nodeIndex])
+                            inputs.Add(nodeValues[src]);
+                    }
+
+                    // Pack first two inputs into uint (Operations expects bit layout like 0b10 or 0b01)
+                    uint packed = PackInputs(inputs);
+                    nodeValues[nodeIndex] = (graph.chipTypes[chipIdx] switch {
+                        Chip.Type.AND    => Operations.AND(packed),
+                        Chip.Type.OR     => Operations.OR(packed),
+                        Chip.Type.NOT    => Operations.NOT(packed),
+                        Chip.Type.XOR    => Operations.XOR(packed),
+                        Chip.Type.NAND   => Operations.NAND(packed),
+                        Chip.Type.NOR    => Operations.NOR(packed),
+                        Chip.Type.CUSTOM => throw new NotImplementedException("Custom chips not currently supported"),
+                        _                => throw new ArgumentOutOfRangeException()
+                    } & 0b1) != 0;
+                }
+
+                // --- Evaluate output nodes ---
+                bool[] outputs = new bool[nOutputs];
+                for (int outIdx = 0; outIdx < nOutputs; outIdx++) {
+                    int        nodeIndex = nInputs + nChips + outIdx;
+                    List<bool> inputs    = new();
+                    for (int src = 0; src < nodeCount; src++) {
+                        if (graph.Matrix[src, nodeIndex])
+                            inputs.Add(nodeValues[src]);
+                    }
+
+                    outputs[outIdx] = inputs.Exists(v => v);
+                }
+
+                table.Add((GetInputBits(combo, nInputs), outputs));
+            }
+
+            return table;
+        }
+
+        static uint PackInputs(List<bool> inputs) {
+            switch (inputs.Count) {
+                case 0:
+                    return 0;
+                case 1:
+                    return inputs[0] ? 1u : 0u;
+            }
+
+            // NOTE: Bit 0 (LSB) is the *left* input, Bit 1 is the *right* input
+            uint a = inputs[0] ? 1u : 0u; // left
+            uint b = inputs[1] ? 1u : 0u; // right
+            return (b << 1) | a;
+        }
+
+        static bool[] GetInputBits(int combo, int nInputs) {
+            bool[] bits = new bool[nInputs];
+            for (int i = 0; i < nInputs; i++)
+                bits[i] = ((combo >> i) & 1) == 1;
+            return bits;
+        }
+        
+        public static string GraphToString(GraphDataSO graph) {
+            List<(bool[] inputs, bool[] outputs)> table = GenerateTruthTable(graph);
+            int    nInputs  = graph.inputCount;
+            int    nOutputs = graph.outputCount;
+
+            StringBuilder sb = new();
+
+            // --- Header ---
+            for (int i = 0; i < nInputs; i++) {
+                sb.Append((char)('A' + i));
+                if (i < nInputs - 1) sb.Append(' ');
+            }
+            sb.Append(" | ");
+
+            for (int i = 0; i < nOutputs; i++) {
+                sb.Append('O').Append(i);
+                if (i < nOutputs - 1) sb.Append(' ');
+            }
+            sb.AppendLine();
+
+            // --- Rows ---
+            foreach ((bool[] inputs, bool[] outputs) in table) {
+                for (int i = 0; i < inputs.Length; i++) {
+                    sb.Append(inputs[i] ? 'T' : 'F');
+                    if (i < inputs.Length - 1) sb.Append(' ');
+                }
+
+                sb.Append(" |  ");
+
+                for (int i = 0; i < outputs.Length; i++) {
+                    sb.Append(outputs[i] ? 'T' : 'F');
+                    if (i < outputs.Length - 1) sb.Append("  ");
+                    // two wide gap to account for output style (O0, O1)
+                }
+
+                sb.AppendLine();
+            }
+
+            return sb.ToString();
         }
     }
 }

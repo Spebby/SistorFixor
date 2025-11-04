@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace Fixor {
     public class Chip : Piece, IPulser {
-        public enum Type {
+        public enum Type : byte {
             NOT,
             AND,
             OR,
@@ -23,7 +23,7 @@ namespace Fixor {
         public Type ChipType { get; private set; }
 
         /// <summary>Bitmask state of input pins</summary>
-        public uint InPins { get; private set; }
+        public uint InPins { get; private set; } = uint.MaxValue; // default so pulse always runs on init
         /// <summary>Bitmask state of output pins</summary>
         public uint OutPins { get; private set; }
 
@@ -130,6 +130,9 @@ namespace Fixor {
                 p.Initialise(this, i, true);
                 // distribute out pins along size
             }
+            
+            // Pulse self to initialise "default" output
+            Pulse();
             
             // if custom chip, we then have to figure out its internal logic
             ProblemSpace.Instance.Register(this);

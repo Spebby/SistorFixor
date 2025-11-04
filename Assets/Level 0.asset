@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 941068d166cc78ee8853befcb3e3a83c, type: 3}
+  m_Name: Level 0
+  m_EditorClassIdentifier: 
+  solution: {fileID: 11400000, guid: 7e2c08a6545877a15be7deadbb7f883f, type: 2}
+  provided: {fileID: 11400000, guid: 249f41d0c6892683a860b213bae92706, type: 2}
+  allowIOSpawning: 0
+  allowChipSpawning: 1

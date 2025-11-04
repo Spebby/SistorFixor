@@ -16,26 +16,40 @@ namespace Fixor {
         [SerializeField] GameObject OutputPrefab;
         // ^ consider replacing w/ addressable
 
-        void Awake() {
-            InitButton("IN",  () => SpawnObj(PulserPrefab));
-            InitButton("OUT", () => SpawnObj(OutputPrefab));
+        readonly GameObject[] _ioButtons = new GameObject[2];
+        readonly GameObject[] _chipButtons = new GameObject[NAMES.Length];
 
-            // add the buttons (atsp replace names with dynamic list)
+        // needs to run during initialiser.
+        public void Initialise() {
+            _ioButtons[0] = InitButton("IN",  () => SpawnObj(PulserPrefab));
+            _ioButtons[1] = InitButton("OUT", () => SpawnObj(OutputPrefab));
+
+            // add the buttons (todo replace names with dynamic list)
+            int i = 0;
             foreach (Chip.Type type in NAMES) {
-                InitButton(type.ToString(), () => {
+                _chipButtons[i++] = InitButton(type.ToString(), () => {
                     GameObject chip = SpawnObj(ChipPrefab);
                     chip.GetComponent<Chip>().Initialise(name: type.ToString(), chipType: type, nim: type == NOT ? 1u : 2u);
                 });
             }
         }
 
-        void InitButton(in string name, Action spawnAction) {
+        public void ToggleIOButtons() {
+            foreach (GameObject button in _ioButtons) button.SetActive(!button.activeInHierarchy);
+        }
+
+        public void ToggleChipButtons() {
+            foreach (GameObject button in _chipButtons) button.SetActive(!button.activeInHierarchy);
+        }
+
+        GameObject InitButton(in string name, Action spawnAction) {
             GameObject      obj  = Instantiate(ButtonPrefab.gameObject, ScrollBar);
             TextMeshProUGUI text = obj.GetComponentInChildren<TextMeshProUGUI>();
             text.text = name;
             obj.name  = $"Create ({name})";
             Button button = obj.GetComponent<Button>();
             button.onClick.AddListener(() => spawnAction());
+            return obj;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

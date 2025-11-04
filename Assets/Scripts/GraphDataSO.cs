@@ -53,5 +53,55 @@ namespace Fixor {
                     Matrix[i, j] = serializedMatrix != null && serializedMatrix[i * n + j];
             }
         }
+
+        /// <summary>
+        /// Builds a GraphDataSO from runtime circuit objects.
+        /// <i>(Intended for use in problem space)</i>
+        /// </summary>
+        public static GraphDataSO BuildGraphData(
+            IEnumerable<Pulser> inputs,
+            IEnumerable<Chip> chips,
+            IEnumerable<Output> outputs) {
+            GraphDataSO graph = CreateInstance<GraphDataSO>();
+            List<Pulser> inputList  = new(inputs);
+            List<Chip>   chipList   = new(chips);
+            List<Output> outputList = new(outputs);
+
+            graph.inputCount  = inputList.Count;
+            graph.chipCount   = chipList.Count;
+            graph.outputCount = outputList.Count;
+            graph.InitMatrix();
+
+            // --- Assign chip types ---
+            graph.chipTypes.Clear();
+            foreach (Chip chip in chipList)
+                graph.chipTypes.Add(chip.ChipType);
+
+            // --- Map objects to matrix indices ---
+            Dictionary<object, int> nodeIndex = new(inputList.Count + chipList.Count + outputList.Count);
+
+            for (int i = 0; i < inputList.Count; i++) nodeIndex[inputList[i]] = i;
+            for (int i = 0; i < chipList.Count; i++) nodeIndex[chipList[i]] = graph.inputCount + i;
+            for (int i = 0; i < outputList.Count; i++) nodeIndex[outputList[i]] = graph.inputCount + graph.chipCount + i;
+
+            // --- Build connections ---
+            MarkOutputs(inputList); // Inputs -> (Chips | Outputs)
+            MarkOutputs(chipList);  // Chips → (Chips | Outputs)
+
+            // Outputs have no outgoing edges
+            return graph;
+
+            void MarkOutputs<T>(List<T> list) where T : IPulser {
+                foreach (T input in list) {
+                    IReadOnlyList<IPulser> neigh = input.Neighbours();
+                    if (neigh is null) continue;
+                    int from = nodeIndex[input];
+                    foreach (IPulser target in neigh) {
+                        if (nodeIndex.TryGetValue(target, out int to))
+                            graph.Matrix[from, to] = true;
+                    }
+                }
+            }
+        }
     }
 }

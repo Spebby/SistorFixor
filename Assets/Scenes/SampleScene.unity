@@ -287,7 +287,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b906142ef1814383a92fcd2a7528d89d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  graphData: {fileID: 11400000, guid: ca5f1fbfee77fe92a9349540348db60c, type: 2}
+  levelData: {fileID: 11400000, guid: 5ad4ee5bade3774d7bd300d6ac7bc42d, type: 2}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -394,7 +394,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 6
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -615,14 +615,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1525418784}
+  - component: {fileID: 1525418789}
   - component: {fileID: 1525418788}
   - component: {fileID: 1525418787}
   - component: {fileID: 1525418786}
   - component: {fileID: 1525418785}
-  - component: {fileID: 1525418789}
   m_Layer: 0
   m_Name: Bar
-  m_TagString: Untagged
+  m_TagString: ChipBar
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1083,7 +1083,7 @@ GameObject:
   - component: {fileID: 2097516789}
   m_Layer: 0
   m_Name: GameObject
-  m_TagString: Untagged
+  m_TagString: TruthTableText
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
