@@ -6,7 +6,7 @@ using UnityEngine;
 
 
 namespace Fixor {
-    public class Chip : Piece, IPulser, IOperation {
+    public class Chip : Piece, IPulser {
         public enum Type {
             NOT,
             AND,
@@ -108,6 +108,7 @@ namespace Fixor {
                 InPins |= _receptors[i].State << i; 
             }
 
+            // this may be causing some headaches. double check if this is actually the problem
             if (InPins == org) return;
             
             // pulse wires

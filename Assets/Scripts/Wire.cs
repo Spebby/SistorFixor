@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -9,39 +10,62 @@ namespace Fixor {
         [SerializeField] internal PinReceptor B;
 
         LineRenderer _lr;
+        EdgeCollider2D _edge;
+
+        static Color _onColour;
+        static Color _offColour;
         
         void OnDestroy() {
+            A.outWires.Remove(this);
             A.wires.Remove(this);
             B.wires.Remove(this);
-            ProblemSpace.Instance.wires.Remove(this);
+            B.State = 0u;
+            ProblemSpace.Instance.Deregister(this);
         }
 
         public void Initialise(PinReceptor a, PinReceptor b) {
+            _onColour  = Color.HSVToRGB(0f, 0.68f, 0.85f);
+            _offColour = Color.HSVToRGB(0f, 0f, 0.15f);
+            
             A = a;
             B = b;
             
             A.AddWire(this, true);
             B.AddWire(this, false);
             
-            _lr = gameObject.AddComponent<LineRenderer>();
-            _lr.material      = new Material(Shader.Find("Sprites/Default"));
-            _lr.startColor    = _lr.endColor = Color.cyan;
+            _lr               = gameObject.AddComponent<LineRenderer>();
+            _lr.material      = new Material(Shader.Find("Sprites/Default")) { color = A.State > 0 ? _onColour : _offColour };
+            _lr.startColor    = _lr.endColor = Color.white;
             _lr.startWidth    = _lr.endWidth = 0.2f;
             _lr.positionCount = 2;
             _lr.SetPosition(0, A.transform.position);
             _lr.SetPosition(1, B.transform.position);
+
+
+            gameObject.AddComponent<EdgeCollider2D>();
+            _edge                  = gameObject.GetComponent<EdgeCollider2D>();
+            _edge.edgeRadius       = _lr.endWidth * 0.5f;
+
+            Pulse();
+            ProblemSpace.Instance.Register(this);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void Pulse() => B.State = A.State;
+        internal void Pulse() {
+            B.State = A.State;
+            _lr.material.color = B.State > 0 ? _onColour : _offColour;
+        }
 
         void LateUpdate() {
-            _lr?.SetPosition(0, A.transform.position);
-            _lr?.SetPosition(1, B.transform.position);
+            if (!_lr) return;
+            List<Vector2> points = new() { A.transform.position, B.transform.position };
+            _lr?.SetPosition(0, points[0]);
+            _lr?.SetPosition(1, points[1]);
+            _edge?.SetPoints(points);
         }
 
         void OnMouseUpAsButton() {
-            Destroy(this);
+            Destroy(gameObject);
         }
     }
     
@@ -80,15 +104,14 @@ namespace Fixor {
             }
         
             if (endPin && endPin != StartPin) {
-                if (!StartPin.IsOut) {
-                    if (!endPin.IsOut) {
-                        CancelDrag();
-                        return;
-                    }
-                    (StartPin, endPin) = (endPin, StartPin);
-                    // if wire is "backwards" then flip.
+                if (StartPin.IsOut == endPin.IsOut) {
+                    CancelDrag();
+                    return;
                 }
-                
+
+                // If wires are "backwards" flip their order
+                if (!StartPin.IsOut) (StartPin, endPin) = (endPin, StartPin);
+
                 GameObject wireObj = new($"Wire_{StartPin.name}/{endPin.name}");
                 Wire       wire    = wireObj.AddComponent<Wire>();
                

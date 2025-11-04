@@ -19,6 +19,8 @@ namespace Fixor {
             Parent = parent;
             Index  = index;
             IsOut  = isOut;
+
+            name = $"{(parent as MonoBehaviour)!.name}_{(char)('A' + index)}";
         }
 
         public uint State { get; internal set; }

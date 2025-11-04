@@ -18,7 +18,7 @@ namespace Fixor {
 
             OutputNames = new string[data.numOutPins];
             for (int i = 0; i < OutputNames.Length; i++) {
-                OutputNames[i] = $"{Name}_{(char)(65 + i)}";
+                OutputNames[i] = $"{Name}_{(char)('A' + i)}";
                 // Forme Name_A, Name_B, Name_C...
                 // Eventually breaks but the uints for pin representation is likely to break first.
             }

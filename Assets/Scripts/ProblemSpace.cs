@@ -7,8 +7,8 @@ namespace Fixor {
         public HashSet<Chip> chips = new();
         public HashSet<Wire> wires = new();
 
-        [SerializeField] PinReceptor[] ins;
-        [SerializeField] PinReceptor[] outs;
+        HashSet<Pulser> ins = new();
+        HashSet<Output> outs = new();
         
         // We have to evaluate things *IN STEP* and in order to get correct output.
         // Additionally, account for cyclic states.
@@ -27,21 +27,30 @@ namespace Fixor {
         }
 
         void Awake() {
-            Application.targetFrameRate = 60;
-        }
-        
-        public void Register(Chip chip) {
-            chips.Add(chip);
-            foreach (Wire w in Chip.OutWires(chip)) {
-                wires.Add(w);
-            }
-            
-            // copy contents of event queues to new queues.
+            Application.targetFrameRate = 120;
         }
 
-        public void Deregister(Chip chip) {
-            chips.Remove(chip);
-            // dont manually remove wires since destructor on wires will handle it
+        // The register functions *ALWAYS* pulse on new relevant connections
+        public void Register(Chip chip) => chips.Add(chip);
+        public void Register(Pulser pulser) => ins.Add(pulser);
+        public void Register(Output o) => outs.Add(o);
+        public void Register(Wire wire) {
+            wires.Add(wire);
+            foreach (Pulser p in ins) {
+                _currQueue.Enqueue(p);
+            }
+            _currQueue.Enqueue(wire.B.Parent);
+        }
+
+        public void Deregister(Chip chip) => chips.Remove(chip);
+        public void Deregister(Pulser pulser) => ins.Remove(pulser);
+        public void Deregister(Output o) => outs.Remove(o);
+        public void Deregister(Wire wire) {
+            wires.Remove(wire);
+            foreach (Pulser p in ins) {
+                _currQueue.Enqueue(p);
+            }
+            _currQueue.Enqueue(wire.B.Parent);
         }
 
 
@@ -60,7 +69,7 @@ namespace Fixor {
        
         // I assume chip's in-pins have already been updated from a wire pulse.
         void Tick() {
-            int steps = chips.Count + wires.Count;
+            int steps = chips.Count + wires.Count + ins.Count + outs.Count;
             for (int i = 0; i < steps; i++) {
                 while (_currQueue.TryDequeue(out IPulser p)) {
                     if (p is null) continue; // can be null due to destruction
