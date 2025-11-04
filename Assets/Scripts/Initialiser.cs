@@ -2,8 +2,11 @@ using UnityEngine;
 
 namespace Fixor {
     public class Initialiser : MonoBehaviour {
+        [SerializeField] GraphDataSO graphData;
         void Awake() {
-            ProblemSpace _ = ProblemSpace.Instance;
+            _ = GameManager.Instance;
+            _ = ProblemSpace.Instance;
+            ProblemSpace.Instance.InitLevel(graphData);
         }
     }
 }

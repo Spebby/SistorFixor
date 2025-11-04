@@ -1,3 +1,15 @@
 fileFormatVersion: 2
 guid: 1824bff4852f4462908bfd0387debf2f
-timeCreated: 1761778937
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - ChipPrefab: {fileID: 6967474382353674187, guid: 9fed9ddb24bdc0b6e93dea69f6a8a20e, type: 3}
+  - PulserPrefab: {fileID: 6967474382353674187, guid: 7848cdb7115acb94abed8deb28d19e62, type: 3}
+  - OutputPrefab: {fileID: 6967474382353674187, guid: bb3b68b038eeeeb66a7c41044c679c48, type: 3}
+  - WirePrefab: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

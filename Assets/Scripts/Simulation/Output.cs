@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Fixor {
     public class Output : Piece, IPulser {
         [SerializeField] GameObject prefab;
-        PinReceptor _child;
+        internal PinReceptor Child;
 
         static Color _offColour;
         static Color _onColour;
@@ -21,9 +21,9 @@ namespace Fixor {
             
             _mat.color = _offColour;
             
-            _child                         = Instantiate(prefab, transform, true).GetComponent<PinReceptor>();
-            _child.transform.localPosition = new Vector3(-0.5f, 0);
-            _child.Initialise(this, 0);
+            Child                         = Instantiate(prefab, transform, true).GetComponent<PinReceptor>();
+            Child.transform.localPosition = new Vector3(-0.5f, 0);
+            Child.Initialise(this, 0);
             
             ProblemSpace.Instance.Register(this);
         }
@@ -33,7 +33,7 @@ namespace Fixor {
         }
 
         public void Pulse() {
-            State      = _child.State;
+            State      = Child.State;
             _mat.color = IsOn ? _onColour : _offColour;
         }
         

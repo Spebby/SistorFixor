@@ -27,8 +27,9 @@ namespace Fixor {
             _onColour  = Color.HSVToRGB(0f, 0.68f, 0.85f);
             _offColour = Color.HSVToRGB(0f, 0f, 0.15f);
             
-            A = a;
-            B = b;
+            A               = a;
+            B               = b;
+            gameObject.name = $"Wire_{A.name}/{B.name}";
             
             A.AddWire(this, true);
             B.AddWire(this, false);

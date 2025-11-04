@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da943d2623cc478d99dd6e47f9404253, type: 3}
+  m_Name: Test
+  m_EditorClassIdentifier: 
+  inputCount: 2
+  chipCount: 7
+  outputCount: 1
+  chipTypes: 01000000010000000000000003000000020000000100000001000000
+  serializedMatrix: 00000000000101000100000000000000000000000000000000000000010000000100000000000000000000000000010000000000000000000000000000010100000000000100000000000100000000000000000000000100010000000000000000000000
+  serializedSize: 10
