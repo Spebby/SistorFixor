@@ -10,10 +10,7 @@ namespace Fixor {
         static readonly Chip.Type[] NAMES = { NAND, NOT, AND, OR, XOR, NOR };
         
         [SerializeField] RectTransform ScrollBar;
-        [SerializeField] GameObject ButtonPrefab;
-        [SerializeField] GameObject ChipPrefab;
-        [SerializeField] GameObject PulserPrefab;
-        [SerializeField] GameObject OutputPrefab;
+
         // ^ consider replacing w/ addressable
 
         readonly GameObject[] _ioButtons = new GameObject[2];
@@ -21,14 +18,14 @@ namespace Fixor {
 
         // needs to run during initialiser.
         public void Initialise() {
-            _ioButtons[0] = InitButton("IN",  () => SpawnObj(PulserPrefab));
-            _ioButtons[1] = InitButton("OUT", () => SpawnObj(OutputPrefab));
+            _ioButtons[0] = InitButton("IN",  () => SpawnObj(ServiceLocator.PulserPrefab.gameObject));
+            _ioButtons[1] = InitButton("OUT", () => SpawnObj(ServiceLocator.OutputPrefab.gameObject));
 
             // add the buttons (todo replace names with dynamic list)
             int i = 0;
             foreach (Chip.Type type in NAMES) {
                 _chipButtons[i++] = InitButton(type.ToString(), () => {
-                    GameObject chip = SpawnObj(ChipPrefab);
+                    GameObject chip = SpawnObj(ServiceLocator.ChipPrefab.gameObject);
                     chip.GetComponent<Chip>().Initialise(name: type.ToString(), chipType: type, nim: type == NOT ? 1u : 2u);
                 });
             }
@@ -42,8 +39,15 @@ namespace Fixor {
             foreach (GameObject button in _chipButtons) button.SetActive(!button.activeInHierarchy);
         }
 
+        public void ToggleNonUniversalGates() {
+            foreach (GameObject button in _chipButtons) {
+                if (button.name is not ("Create (NAND)" or "Create (NOR)"))
+                    button.SetActive(!button.activeInHierarchy);
+            }
+        }
+
         GameObject InitButton(in string name, Action spawnAction) {
-            GameObject      obj  = Instantiate(ButtonPrefab.gameObject, ScrollBar);
+            GameObject      obj  = Instantiate(ServiceLocator.ButtonPrefab.gameObject, ScrollBar);
             TextMeshProUGUI text = obj.GetComponentInChildren<TextMeshProUGUI>();
             text.text = name;
             obj.name  = $"Create ({name})";

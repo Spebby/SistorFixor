@@ -12,7 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 941068d166cc78ee8853befcb3e3a83c, type: 3}
   m_Name: Level 2
   m_EditorClassIdentifier: 
-  solution: {fileID: 11400000, guid: ca5f1fbfee77fe92a9349540348db60c, type: 2}
-  provided: {fileID: 11400000, guid: 818fcde12263eb9d9893178fbfaa7e0b, type: 2}
+  solution: {fileID: 11400000, guid: 7e2c08a6545877a15be7deadbb7f883f, type: 2}
+  provided: {fileID: 11400000, guid: 249f41d0c6892683a860b213bae92706, type: 2}
   allowIOSpawning: 0
   allowChipSpawning: 1
+  universalGatesOnly: 1
+  timerLength: 25
+  shouldAnimate: 0

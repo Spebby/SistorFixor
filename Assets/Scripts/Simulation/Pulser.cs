@@ -12,7 +12,6 @@ namespace Fixor {
 
     
     public class Pulser : Piece, IPulser {
-        [SerializeField] PinReceptor prefab;
         internal PinReceptor Child;
 
         static Color _offColour;
@@ -26,6 +25,7 @@ namespace Fixor {
             name       = $"Pulser[{(char)('A' + ProblemSpace.Instance.NumInputs)}]";
             _text      = GetComponentInChildren<TextMeshPro>();
             _text.text = $"{(char)('A' + ProblemSpace.Instance.NumInputs)}";
+            
             _mat       = GetComponent<MeshRenderer>().material;
             State      = 0u;
             _onColour  = Color.HSVToRGB(0f, 0.68f, 1f);
@@ -34,15 +34,15 @@ namespace Fixor {
             
             
             // create and init receptor child
-            Child = Instantiate(prefab, transform, false);
-            Child.transform.localPosition = new Vector3(0.5f, 0);
+            Child = Instantiate(ServiceLocator.ReceptorPrefab, transform, false);
+            Child.transform.localPosition = new Vector3(0.5f, 0, -1);
             Child.Initialise(this, 0, true);
 
             ProblemSpace.Instance.Register(this);
         }
 
         void OnDestroy() {
-            ProblemSpace.Instance.Register(this);
+            ProblemSpace.Instance.Deregister(this);
         }
 
         public void Pulse() {

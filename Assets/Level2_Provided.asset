@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Level2_Provided
   m_EditorClassIdentifier: 
   inputCount: 2
-  chipCount: 2
+  chipCount: 0
   outputCount: 1
-  chipTypes: 0003
-  serializedMatrix: 00000000000000010000000000010000000000000000000000
-  serializedSize: 5
+  chipTypes: 
+  serializedMatrix: 000000000000000000
+  serializedSize: 3

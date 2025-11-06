@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: da943d2623cc478d99dd6e47f9404253, type: 3}
-  m_Name: Level2_Solution
+  m_Name: Level3_Solution
   m_EditorClassIdentifier: 
   inputCount: 2
-  chipCount: 1
-  outputCount: 1
-  chipTypes: 01
-  serializedMatrix: 00000100000001000000000100000000
-  serializedSize: 4
+  chipCount: 4
+  outputCount: 2
+  chipTypes: 03010502
+  serializedMatrix: 00000101000000000000010100000000000000000101000000000000010100000000000000000100000000000000000100000000000000000000000000000000
+  serializedSize: 8

@@ -72,7 +72,7 @@ namespace Fixor {
     
     public static class WireDragController {
         public static bool IsDragging { get; private set; }
-        public static PinReceptor StartPin { get; private set; }
+        static PinReceptor StartPin { get; set; }
         static LineRenderer _line;
 
         public static void BeginDrag(PinReceptor startPin) {
@@ -116,7 +116,7 @@ namespace Fixor {
                 GameObject wireObj = new($"Wire_{StartPin.name}/{endPin.name}");
                 Wire       wire    = wireObj.AddComponent<Wire>();
                
-                // I don't want input pins to have multiple connections, outpins can have more than one.
+                // I don't want input pins to have multiple connections, out-pins can have more than one.
                 if (endPin.wires.Count > 0) endPin.RemoveWires();
                 wire.Initialise(StartPin, endPin);
             }

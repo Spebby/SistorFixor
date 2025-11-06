@@ -27,8 +27,21 @@ namespace Fixor {
                 _lilInstance            = singletonObject.AddComponent<ProblemSpace>();
                 _lilInstance._currQueue = _lilInstance._queueA;
                 _lilInstance._nextQueue = _lilInstance._queueB;
+                DontDestroyOnLoad(singletonObject);
+                
                 return _lilInstance;
             }
+        }
+
+        void OnDestroy() {
+            if (_lilInstance == this) _lilInstance = null;
+        }
+
+        void Reset() {
+            _chips.Clear();
+            _wires.Clear();
+            _ins.Clear();
+            _outs.Clear();
         }
 
         // The register functions *ALWAYS* pulse on new relevant connections
@@ -100,8 +113,15 @@ namespace Fixor {
          * Graph construction code for problems
          */
         
-        // Prime example of code to replace post-prototype
+		// NOTE: Temporary post-prototype workaround
+		// If a gate has fewer connected inputs than required (e.g. A -> NAND),
+		// the simulator will duplicate the existing input across all remaining
+		// unconnected input pins. This allows single-input connections like
+		// A -> NAND(A, A) to function correctly without explicit multi-pin wiring.
+		// If we had more complex chips this would be unacceptable, but it's acceptable
+		// here
         public void InitLevel(GraphDataSO level) {
+            Reset();
             int inputs  = level.inputCount;
             int chips   = level.chipCount;
             int outputs = level.outputCount;
@@ -158,6 +178,18 @@ namespace Fixor {
                         CreateWire(sourceReceptor, targetReceptor);
                 }
             }
+
+            // Fill dangling chip input pins with the previous input's connection
+            // (since adjacency matrix cannot encode duplicate A→A connections)
+            foreach (Chip chip in chipNodes) {
+                PinReceptor r = chip.GetNextFreeInput();
+                if (r == null) continue;
+                uint        i = r.Index;
+                if (i is > 2 or 0) continue;
+                
+                // dis' ass but we ball.
+                CreateWire(r, chip.FirstIn.wires[0].A);
+            }
             
             LayoutNodes(inputNodes, chipNodes, outputNodes);
             PulseStart();
@@ -205,21 +237,19 @@ namespace Fixor {
             }
         }
         
-        [SerializeField] GameObject ChipPrefab;
-        [SerializeField] GameObject PulserPrefab;
-        [SerializeField] GameObject OutputPrefab;
-        public Pulser CreateInput() {
-            Pulser p = Instantiate(PulserPrefab).GetComponent<Pulser>();
+
+        public static Pulser CreateInput() {
+            Pulser p = Instantiate(ServiceLocator.PulserPrefab).GetComponent<Pulser>();
             return p;
         }
 
-        public Output CreateOutput() {
-            Output o = Instantiate(OutputPrefab).GetComponent<Output>();
+        public static Output CreateOutput() {
+            Output o = Instantiate(ServiceLocator.OutputPrefab).GetComponent<Output>();
             return o;
         }
         
-        public Chip CreateChip(Chip.Type type, string chipName = "") {
-            Chip c = Instantiate(ChipPrefab).GetComponent<Chip>();
+        public static Chip CreateChip(Chip.Type type, string chipName = "") {
+            Chip c = Instantiate(ServiceLocator.ChipPrefab).GetComponent<Chip>();
             c.Initialise(string.IsNullOrEmpty(chipName) ? type.ToString() : chipName , type, type == Chip.Type.NOT ? 1u : 2u, 1u);
             return c;
         }
@@ -241,28 +271,73 @@ namespace Fixor {
             int nOutputs  = graph.outputCount;
             int nodeCount = graph.NodeCount;
 
+            // Build adjacency list
+            List<int>[] adj                            = new List<int>[nodeCount];
+            for (int i = 0; i < nodeCount; i++) adj[i] = new List<int>();
+
+            for (int i = 0; i < nodeCount; i++) {
+                for (int j = 0; j < nodeCount; j++) {
+                    if (graph.Matrix[i, j])
+                        adj[i].Add(j);
+                }
+            }
+
+            // Kahn's algorithm
+            int[] inDegree = new int[nodeCount];
+            for (int i = 0; i < nodeCount; i++) {
+                foreach (int j in adj[i])
+                    inDegree[j]++;
+            }
+
+            Queue<int> queue = new();
+            for (int i = 0; i < nodeCount; i++) {
+                if (inDegree[i] == 0)
+                    queue.Enqueue(i);
+            }
+
+            List<int> topoOrder = new();
+            while (queue.Count > 0) {
+                int u = queue.Dequeue();
+                topoOrder.Add(u);
+
+                foreach (int v in adj[u]) {
+                    inDegree[v]--;
+                    if (inDegree[v] == 0) queue.Enqueue(v);
+                }
+            }
+            // ^ this may actually get stuck if theres a cycle. idk tho
+
+            if (topoOrder.Count != nodeCount) throw new InvalidOperationException("Graph contains a cycle!");
+
+            // --- Generate truth table ---
             int                                   totalCombinations = 1 << nInputs;
             List<(bool[] inputs, bool[] outputs)> table             = new(totalCombinations);
 
             for (int combo = 0; combo < totalCombinations; combo++) {
                 bool[] nodeValues = new bool[nodeCount];
 
-                // --- Assign input bits ---
+                // Assign input bits
                 for (int i = 0; i < nInputs; i++)
                     nodeValues[i] = ((combo >> i) & 1) == 1;
 
-                // --- Evaluate chip nodes ---
-                for (int chipIdx = 0; chipIdx < nChips; chipIdx++) {
-                    int nodeIndex = nInputs + chipIdx;
-
-                    // Collect connected inputs for this chip
-                    List<bool> inputs = new();
+                // Evaluate nodes in topological order
+                foreach (int nodeIndex in topoOrder) {
+                    if (nodeIndex < nInputs || nodeIndex >= nInputs + nChips) continue; // inputs already set/is output
+                    
+                    // Chip nodes
+                    int        chipIdx = nodeIndex - nInputs;
+                    List<bool> inputs  = new();
                     for (int src = 0; src < nodeCount; src++) {
                         if (graph.Matrix[src, nodeIndex])
                             inputs.Add(nodeValues[src]);
                     }
 
-                    // Pack first two inputs into uint (Operations expects bit layout like 0b10 or 0b01)
+                    // Fill dangling pins for multi-input chips
+                    if (graph.chipTypes[chipIdx] != Chip.Type.NOT && inputs.Count > 0 && inputs.Count != 2) {
+                        bool last = inputs[^1];
+                        while (inputs.Count < 3) inputs.Add(last);
+                    }
+
                     uint packed = PackInputs(inputs);
                     nodeValues[nodeIndex] = (graph.chipTypes[chipIdx] switch {
                         Chip.Type.AND    => Operations.AND(packed),
@@ -276,7 +351,7 @@ namespace Fixor {
                     } & 0b1) != 0;
                 }
 
-                // --- Evaluate output nodes ---
+                // Collect outputs (done outside above loop for code simplicity)
                 bool[] outputs = new bool[nOutputs];
                 for (int outIdx = 0; outIdx < nOutputs; outIdx++) {
                     int        nodeIndex = nInputs + nChips + outIdx;
@@ -294,6 +369,7 @@ namespace Fixor {
 
             return table;
         }
+
 
         static uint PackInputs(List<bool> inputs) {
             switch (inputs.Count) {
@@ -331,7 +407,7 @@ namespace Fixor {
             sb.Append(" | ");
 
             for (int i = 0; i < nOutputs; i++) {
-                sb.Append('O').Append(i);
+                sb.Append($"O{(char)('A' + i)}");
                 if (i < nOutputs - 1) sb.Append(' ');
             }
             sb.AppendLine();

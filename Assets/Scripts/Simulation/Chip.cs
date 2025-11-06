@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using TMPro;
 using UnityEngine;
 
@@ -19,7 +17,6 @@ namespace Fixor {
             CUSTOM
         }
 
-        public string Name { get; private set; } = "Untitled";
         public Type ChipType { get; private set; }
 
         /// <summary>Bitmask state of input pins</summary>
@@ -31,19 +28,19 @@ namespace Fixor {
         public uint noutPins = 1;
 
 
-        [SerializeField] PinReceptor receptorAsset;
         PinReceptor[] _receptors;
 
         MeshRenderer _mesh;
         TextMeshPro _text;
 
-        // Temp so i don't loose my mind
+        // Temp so I don't lose my mind
         internal PinReceptor Output => _receptors[^1];
-
-        // these aren't intended to be used outside of ProblemSpace graph and should not be depended on
+        internal PinReceptor FirstIn => _receptors[0];
+        
+        // these aren't intended to be used outside ProblemSpace graph and should not be depended on
         // to be accurate.
-        uint _inPinAllocated;
-        internal PinReceptor GetNextFreeInput() {;
+        internal uint _inPinAllocated;
+        internal PinReceptor GetNextFreeInput() {
             uint freeMask = ~_inPinAllocated & ((1u << (int)nimPins) - 1);
             if (freeMask == 0) return null; // all pins allocated
 
@@ -53,7 +50,7 @@ namespace Fixor {
         }
 
         // https://github.com/dotnet/runtime/blob/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/System.Private.CoreLib/src/System/Numerics/BitOperations.cs#L602
-        static ReadOnlySpan<byte> TrailingZeroCountDeBruijn => new byte[32] {
+        static ReadOnlySpan<byte> TrailingZeroCountDeBruijn => new byte[] {
             00, 01, 28, 02, 29, 14, 24, 03,
             30, 22, 20, 15, 25, 17, 04, 08,
             31, 27, 13, 23, 21, 19, 16, 07,
@@ -61,7 +58,7 @@ namespace Fixor {
         };
 
         // evil shit
-        public static int TrailingZeroCount(uint v) {
+        static int TrailingZeroCount(uint v) {
             return v == 0 ? 32 : // special case
                 TrailingZeroCountDeBruijn[(int)(((v & (uint)-(int)v) * 0x077CB531u) >> 27)];
         }
@@ -81,12 +78,11 @@ namespace Fixor {
 
         internal void Initialise(in string name, in Type chipType, uint nim = 2, uint nout = 1) {
             // Constructor stuff
-            Name            = name;
             ChipType        = chipType;
             nimPins         = nim;
             noutPins        = nout;
            
-            gameObject.name = Name;
+            gameObject.name = name;
             _text.text      = chipType == Type.CUSTOM ? name : chipType.ToString();
             
             // determine rect size based on name width & pin count
@@ -100,32 +96,34 @@ namespace Fixor {
                 _         => Color.gray
             };
 
+            /*
             float receptorHeight;
             {
-                PinReceptor p   = Instantiate(receptorAsset);
+                PinReceptor p   = Instantiate(ServiceLocator.ReceptorPrefab);
                 receptorHeight  = p.GetComponentInChildren<MeshRenderer>().bounds.size.y;
                 receptorHeight += receptorHeight * 0.1f;
                 DestroyImmediate(p.gameObject);
             }
+            */
 
-            float nodeHeight = receptorHeight * Mathf.Max(nimPins, noutPins);
+            //float nodeHeight = receptorHeight * Mathf.Max(nimPins, noutPins);
             //_mesh.transform.localScale = new Vector3(Mathf.Abs(_text.flexibleWidth * _text.transform.lossyScale.x), nodeHeight, 1);
             
             for (uint i = 0; i < nimPins; ++i) {
-                PinReceptor p       = Instantiate(receptorAsset, transform, false);
+                PinReceptor p       = Instantiate(ServiceLocator.ReceptorPrefab, transform, false);
                 float       vertPos = 0f;
                 if (nimPins > 1) {
                     vertPos = i > 0 ? -0.5f : 0.5f;
                 }
-                p.transform.localPosition = new Vector3(-0.5f, vertPos);
+                p.transform.localPosition = new Vector3(-0.5f, vertPos, -1);
                 _receptors[i] = p;
-                p.Initialise(this, i, false);
+                p.Initialise(this, i);
                 // distribute in pins along size
             }
 
             for (uint i = 0; i < noutPins; ++i) {
-                PinReceptor p = Instantiate(receptorAsset, transform, false);
-                p.transform.localPosition = new Vector3(0.5f, 0);
+                PinReceptor p = Instantiate(ServiceLocator.ReceptorPrefab, transform, false);
+                p.transform.localPosition = new Vector3(0.5f, 0, -1);
                 _receptors[i + nimPins] = p;
                 p.Initialise(this, i, true);
                 // distribute out pins along size

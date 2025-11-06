@@ -1,2 +1,17 @@
 fileFormatVersion: 2
 guid: b906142ef1814383a92fcd2a7528d89d
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - PinReceptorPrefab: {fileID: 7182479167876599118, guid: 82eae5c0fbde31bbbbaeb6c3b9ec5574, type: 3}
+  - ChipPrefab: {fileID: 1258718243994514739, guid: 9fed9ddb24bdc0b6e93dea69f6a8a20e, type: 3}
+  - PulserPrefab: {fileID: -5247389060138669806, guid: 7848cdb7115acb94abed8deb28d19e62, type: 3}
+  - OutputPrefab: {fileID: 7539311103632031979, guid: bb3b68b038eeeeb66a7c41044c679c48, type: 3}
+  - ButtonPrefab: {fileID: 5220408862655328739, guid: dccd208c44f961f3aa96e61dc21efbd5, type: 3}
+  - levelData: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

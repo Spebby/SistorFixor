@@ -16,3 +16,5 @@ MonoBehaviour:
   provided: {fileID: 11400000, guid: 249f41d0c6892683a860b213bae92706, type: 2}
   allowIOSpawning: 0
   allowChipSpawning: 1
+  universalGatesOnly: 0
+  timerLength: 0

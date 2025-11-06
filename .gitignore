@@ -30,6 +30,8 @@
 .vscode/
 .idea/
 
+/[Aa]ssets/DebugGraph.asset
+
 # Gradle cache directory
 .gradle/
 
