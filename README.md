@@ -12,9 +12,11 @@ rather than diagramming and simulating.
 ## Features
 
 - Fundamental Logic Pieces
-  - NAND, NOR, NOT, I/O
+  - NAND, NOR, I/O
 - Common Logic Pieces
   - AND, OR, XOR
+- Simplistic serialisation
+- Puzzles!
 - NO Clocks!
 
 And that's it!
